@@ -125,6 +125,28 @@ const docTemplate = `{
         },
         "/scores": {
             "post": {
+                "description": "プレイ結果を登録します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scores"
+                ],
+                "summary": "スコア登録",
+                "parameters": [
+                    {
+                        "description": "スコア情報",
+                        "name": "score",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.SubmitScoreRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "登録されたスコアのID",
@@ -365,8 +387,48 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.SubmitScoreRequest": {
+            "type": "object",
+            "properties": {
+                "beatmap_id": {
+                    "type": "string"
+                },
+                "good_fast": {
+                    "type": "integer"
+                },
+                "good_late": {
+                    "type": "integer"
+                },
+                "input": {
+                    "type": "integer"
+                },
+                "max_combo": {
+                    "type": "integer"
+                },
+                "miss": {
+                    "type": "integer"
+                },
+                "perfect_critical_fast": {
+                    "type": "integer"
+                },
+                "perfect_critical_late": {
+                    "type": "integer"
+                },
+                "perfect_fast": {
+                    "type": "integer"
+                },
+                "perfect_late": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.SubmitScoreResponse": {
-            "description": "プレイ結果を登録します",
             "type": "object",
             "properties": {
                 "id": {

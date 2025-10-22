@@ -39,8 +39,34 @@ definitions:
       id:
         type: string
     type: object
+  handler.SubmitScoreRequest:
+    properties:
+      beatmap_id:
+        type: string
+      good_fast:
+        type: integer
+      good_late:
+        type: integer
+      input:
+        type: integer
+      max_combo:
+        type: integer
+      miss:
+        type: integer
+      perfect_critical_fast:
+        type: integer
+      perfect_critical_late:
+        type: integer
+      perfect_fast:
+        type: integer
+      perfect_late:
+        type: integer
+      score:
+        type: integer
+      user_id:
+        type: string
+    type: object
   handler.SubmitScoreResponse:
-    description: プレイ結果を登録します
     properties:
       id:
         type: integer
@@ -164,6 +190,18 @@ paths:
       - ping
   /scores:
     post:
+      consumes:
+      - application/json
+      description: プレイ結果を登録します
+      parameters:
+      - description: スコア情報
+        in: body
+        name: score
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubmitScoreRequest'
+      produces:
+      - application/json
       responses:
         "200":
           description: 登録されたスコアのID
@@ -173,6 +211,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
+      summary: スコア登録
+      tags:
+      - scores
   /songs/playcount:
     get:
       produces:

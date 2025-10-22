@@ -23,17 +23,17 @@ type SubmitScoreRequest struct {
 	Input               uint8  `json:"input"`
 }
 
+type SubmitScoreResponse struct {
+	ID int64 `json:"id"`
+}
+
 // SubmitScore godoc
 // @Summary スコア登録
 // @Description プレイ結果を登録します
 // @Tags scores
 // @Accept json
 // @Produce json
-// @Param body body SubmitScoreRequest true "プレイ結果"
-type SubmitScoreResponse struct {
-	ID int64 `json:"id"`
-}
-
+// @Param score body SubmitScoreRequest true "スコア情報"
 // @Success 200 {object} SubmitScoreResponse "登録されたスコアのID"
 // @Failure 400 {object} ErrorResponse
 // @Router /scores [post]
