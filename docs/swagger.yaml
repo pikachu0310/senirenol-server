@@ -50,7 +50,7 @@ definitions:
       user_name:
         type: string
     type: object
-host: localhost:8080
+host: senirenol.trap.games
 info:
   contact:
     email: support@example.com
@@ -270,6 +270,5 @@ paths:
       tags:
       - users
 schemes:
-- http
 - https
 swagger: "2.0"

@@ -23,9 +23,9 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8080
+// @host senirenol.trap.games
 // @BasePath /api/v1
-// @schemes http https
+// @schemes https
 
 func main() {
 	if err := run(); err != nil {
