@@ -8,27 +8,33 @@ import (
 )
 
 type Chart struct {
-	BeatmapID      string     `db:"beatmap_id"`
-	SongName       string     `db:"song_name"`
-	Difficulty     Difficulty `db:"difficulty"`
-	ParallelString *string    `db:"parallel_string"`
-	CreatedAt      time.Time  `db:"created_at"`
+	BeatmapID      string    `db:"beatmap_id"`
+	SongName       string    `db:"song_name"`
+	Difficulty     int       `db:"difficulty"`
+	ParallelString *string   `db:"parallel_string"`
+	CreatedAt      time.Time `db:"created_at"`
 }
 
 type UpsertChartParams struct {
 	BeatmapID      string
 	SongName       string
-	Difficulty     Difficulty
+	Difficulty     int
 	ParallelString *string
 }
 
 func (r *Repository) UpsertChart(ctx context.Context, p UpsertChartParams) error {
 	// MySQL upsert
+	var par interface{}
+	if p.ParallelString != nil {
+		par = *p.ParallelString
+	} else {
+		par = nil
+	}
 	_, err := r.db.ExecContext(ctx, `
         INSERT INTO charts (beatmap_id, song_name, difficulty, parallel_string)
         VALUES (?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE song_name=VALUES(song_name), difficulty=VALUES(difficulty), parallel_string=VALUES(parallel_string)
-    `, p.BeatmapID, p.SongName, p.Difficulty, p.ParallelString)
+    `, p.BeatmapID, p.SongName, p.Difficulty, par)
 	if err != nil {
 		return fmt.Errorf("upsert chart: %w", err)
 	}

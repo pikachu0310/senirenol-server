@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -82,15 +83,15 @@ func (r *Repository) GetChartRanking(ctx context.Context, beatmapID string, limi
 	}
 
 	var top []RankingEntry
-	if err := r.db.SelectContext(ctx, &top, `
+	query := `
         SELECT s.user_id, u.name, MAX(s.score) AS best_score
         FROM scores s
         JOIN users u ON u.id = s.user_id
         WHERE s.beatmap_id = ?
         GROUP BY s.user_id, u.name
         ORDER BY best_score DESC, u.name ASC
-        LIMIT ?
-    `, beatmapID, limit); err != nil {
+        LIMIT ` + strconv.Itoa(limit)
+	if err := r.db.SelectContext(ctx, &top, query, beatmapID); err != nil {
 		return nil, fmt.Errorf("top ranking: %w", err)
 	}
 
@@ -105,13 +106,15 @@ func (r *Repository) GetChartRanking(ctx context.Context, beatmapID string, limi
 func (r *Repository) GetAllChartsRankings(ctx context.Context, limit int) ([]*ChartRanking, error) {
 	charts, err := r.GetCharts(ctx)
 	if err != nil {
-		return nil, err
+		// 取得に失敗した場合は空配列を返す
+		return []*ChartRanking{}, nil
 	}
 	res := make([]*ChartRanking, 0, len(charts))
 	for _, c := range charts {
 		cr, err := r.GetChartRanking(ctx, c.BeatmapID, limit)
 		if err != nil {
-			return nil, err
+			// 個別の失敗はスキップ
+			continue
 		}
 		res = append(res, cr)
 	}

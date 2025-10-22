@@ -41,7 +41,7 @@ func (h *Handler) UpsertChart(c echo.Context) error {
 	if err := h.repo.UpsertChart(c.Request().Context(), repository.UpsertChartParams{
 		BeatmapID:      req.BeatmapID,
 		SongName:       req.SongName,
-		Difficulty:     repository.Difficulty(req.Difficulty),
+		Difficulty:     int(req.Difficulty),
 		ParallelString: req.ParallelString,
 	}); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)

@@ -50,11 +50,10 @@ func (h *Handler) UpdateUserName(c echo.Context) error {
 	); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	uid, err := uuid.Parse(req.UserID)
-	if err != nil {
+	if _, err := uuid.Parse(req.UserID); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid user_id").SetInternal(err)
 	}
-	if err := h.repo.UpdateUserName(c.Request().Context(), uid, req.UserName); err != nil {
+	if err := h.repo.UpdateUserName(c.Request().Context(), req.UserID, req.UserName); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
 	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
@@ -71,13 +70,13 @@ func (h *Handler) UpdateUserName(c echo.Context) error {
 // @Failure 400 {object} ErrorResponse
 // @Router /users/{userID} [get]
 func (h *Handler) GetUser(c echo.Context) error {
-	userID, err := uuid.Parse(c.Param("userID"))
-	if err != nil {
+	userID := c.Param("userID")
+	if _, err := uuid.Parse(userID); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid userID").SetInternal(err)
 	}
 	u, err := h.repo.GetUser(c.Request().Context(), userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).SetInternal(err)
 	}
 	return c.JSON(http.StatusOK, map[string]any{"id": u.ID, "name": u.Name})
 }

@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/pikachu0310/senirenol-server/core/internal/handler"
-	_ "github.com/pikachu0310/senirenol-server/docs" // Swagger docs
+	docs "github.com/pikachu0310/senirenol-server/docs" // Swagger docs
 	"github.com/pikachu0310/senirenol-server/frontend"
 
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -14,6 +14,9 @@ func SetupRoutes(h *handler.Handler, e *echo.Echo) {
 	e.StaticFS("/", frontend.UI)
 
 	// Swagger UI
+	docs.SwaggerInfo.Host = "senirenol.trap.games"
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Schemes = []string{"https"}
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	v1API := e.Group("/api/v1")

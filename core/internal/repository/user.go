@@ -13,7 +13,7 @@ import (
 type (
 	// users table
 	User struct {
-		ID        uuid.UUID `db:"id"`
+		ID        string    `db:"id"`
 		Name      string    `db:"name"`
 		CreatedAt time.Time `db:"created_at"`
 		UpdatedAt time.Time `db:"updated_at"`
@@ -32,14 +32,14 @@ func randomDefaultName() string {
 func (r *Repository) CreateUser(ctx context.Context) (uuid.UUID, error) {
 	userID := uuid.New()
 	name := randomDefaultName()
-	if _, err := r.db.ExecContext(ctx, "INSERT INTO users (id, name) VALUES (?, ?)", userID, name); err != nil {
+	if _, err := r.db.ExecContext(ctx, "INSERT INTO users (id, name) VALUES (?, ?)", userID.String(), name); err != nil {
 		return uuid.Nil, fmt.Errorf("insert user: %w", err)
 	}
 
 	return userID, nil
 }
 
-func (r *Repository) UpdateUserName(ctx context.Context, userID uuid.UUID, name string) error {
+func (r *Repository) UpdateUserName(ctx context.Context, userID string, name string) error {
 	res, err := r.db.ExecContext(ctx, "UPDATE users SET name = ? WHERE id = ?", name, userID)
 	if err != nil {
 		return fmt.Errorf("update user: %w", err)
@@ -51,9 +51,9 @@ func (r *Repository) UpdateUserName(ctx context.Context, userID uuid.UUID, name 
 	return nil
 }
 
-func (r *Repository) GetUser(ctx context.Context, userID uuid.UUID) (*User, error) {
+func (r *Repository) GetUser(ctx context.Context, userID string) (*User, error) {
 	user := &User{}
-	if err := r.db.GetContext(ctx, user, "SELECT * FROM users WHERE id = ?", userID); err != nil {
+	if err := r.db.GetContext(ctx, user, "SELECT id, name, created_at, updated_at FROM users WHERE id = ?", userID); err != nil {
 		return nil, fmt.Errorf("select user: %w", err)
 	}
 	return user, nil
