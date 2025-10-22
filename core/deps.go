@@ -1,8 +1,8 @@
 package core
 
 import (
-	"github.com/pikachu0310/go-backend-template/core/internal/handler"
-	"github.com/pikachu0310/go-backend-template/core/internal/repository"
+	"github.com/pikachu0310/senirenol-server/core/internal/handler"
+	"github.com/pikachu0310/senirenol-server/core/internal/repository"
 
 	"github.com/jmoiron/sqlx"
 )

@@ -1,9 +1,9 @@
 package core
 
 import (
-	"github.com/pikachu0310/go-backend-template/core/internal/handler"
-	_ "github.com/pikachu0310/go-backend-template/docs" // Swagger docs
-	"github.com/pikachu0310/go-backend-template/frontend"
+	"github.com/pikachu0310/senirenol-server/core/internal/handler"
+	_ "github.com/pikachu0310/senirenol-server/docs" // Swagger docs
+	"github.com/pikachu0310/senirenol-server/frontend"
 
 	echoSwagger "github.com/swaggo/echo-swagger"
 

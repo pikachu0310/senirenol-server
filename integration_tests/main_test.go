@@ -3,8 +3,8 @@ package integrationtests
 import (
 	"testing"
 
-	"github.com/pikachu0310/go-backend-template/core"
-	"github.com/pikachu0310/go-backend-template/core/database"
+	"github.com/pikachu0310/senirenol-server/core"
+	"github.com/pikachu0310/senirenol-server/core/database"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"

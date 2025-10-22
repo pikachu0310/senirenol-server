@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/pikachu0310/go-backend-template/core/internal/repository"
+	"github.com/pikachu0310/senirenol-server/core/internal/repository"
 )
 
 type Handler struct {

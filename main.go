@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/pikachu0310/go-backend-template/core"
-	"github.com/pikachu0310/go-backend-template/core/database"
+	"github.com/pikachu0310/senirenol-server/core"
+	"github.com/pikachu0310/senirenol-server/core/database"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
