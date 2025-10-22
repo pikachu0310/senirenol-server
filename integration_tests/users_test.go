@@ -26,9 +26,15 @@ func TestUsers(t *testing.T) {
 	rec = doRequest(t, "GET", "/api/v1/users/"+uid, "")
 	t.Logf("get user resp: %s", rec.Body.String())
 	assert.Equal(t, rec.Result().Status, `200 OK`)
+	user := unmarshalResponse(t, rec)
+	assert.Equal(t, user["id"].(string), uid)
+	assert.Equal(t, user["name"].(string), "Bob")
 
 	// stats (no scores yet also OK)
 	rec = doRequest(t, "GET", "/api/v1/users/"+uid+"/stats", "")
 	t.Logf("stats resp: %s", rec.Body.String())
 	assert.Equal(t, rec.Result().Status, `200 OK`)
+	stats := unmarshalResponse(t, rec)
+	assert.Equal(t, int(stats["total_plays"].(float64)), 0)
+	assert.Equal(t, int(stats["distinct_charts"].(float64)), 0)
 }

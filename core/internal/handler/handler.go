@@ -57,4 +57,9 @@ type (
 		PlayCount   int                    `json:"play_count"`
 		Top         []RankingEntryResponse `json:"top"`
 	}
+
+	SongPlaycountResponse struct {
+		SongName  string `json:"song_name"`
+		PlayCount int    `json:"play_count"`
+	}
 )

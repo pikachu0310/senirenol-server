@@ -99,5 +99,10 @@ func (h *Handler) GetUserStats(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, s)
+	return c.JSON(http.StatusOK, UserStatsResponse{
+		TotalPlays:     s.TotalPlays,
+		DistinctCharts: s.DistinctCharts,
+		BestScore:      s.BestScore,
+		AverageScore:   s.AverageScore,
+	})
 }

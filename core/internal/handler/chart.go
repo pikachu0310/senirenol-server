@@ -107,7 +107,11 @@ func (h *Handler) GetSongPlaycountRanking(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, rs)
+	out := make([]SongPlaycountResponse, len(rs))
+	for i, r := range rs {
+		out[i] = SongPlaycountResponse{SongName: r.SongName, PlayCount: r.PlayCount}
+	}
+	return c.JSON(http.StatusOK, out)
 }
 
 func toRankingEntryResponse(in []repository.RankingEntry) []RankingEntryResponse {
