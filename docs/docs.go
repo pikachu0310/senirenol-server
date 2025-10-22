@@ -49,12 +49,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "登録結果",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handler.UpsertChartResponse"
                         }
                     },
                     "400": {
@@ -92,10 +89,12 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "ランキング配列",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handler.ChartRankingResponse"
+                            }
                         }
                     }
                 }
@@ -126,34 +125,11 @@ const docTemplate = `{
         },
         "/scores": {
             "post": {
-                "description": "プレイ結果を登録します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "scores"
-                ],
-                "summary": "スコア登録",
-                "parameters": [
-                    {
-                        "description": "プレイ結果",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.SubmitScoreRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "登録されたスコアのID",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handler.SubmitScoreResponse"
                         }
                     },
                     "400": {
@@ -203,12 +179,9 @@ const docTemplate = `{
                 "summary": "ユーザー登録",
                 "responses": {
                     "200": {
-                        "description": "{\\\"id\\\":\\\"UUID\\\"}",
+                        "description": "登録されたユーザーのID",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handler.RegisterUserResponse"
                         }
                     }
                 }
@@ -240,12 +213,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\\\"status\\\":\\\"ok\\\"}",
+                        "description": "更新結果",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handler.UpdateUserNameResponse"
                         }
                     },
                     "400": {
@@ -282,12 +252,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{id,name}",
+                        "description": "ユーザー情報",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handler.GetUserResponse"
                         }
                     },
                     "400": {
@@ -321,10 +288,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "統計情報",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handler.UserStatsResponse"
                         }
                     },
                     "400": {
@@ -338,6 +304,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handler.ChartRankingResponse": {
+            "type": "object",
+            "properties": {
+                "beatmap_id": {
+                    "type": "string"
+                },
+                "play_count": {
+                    "type": "integer"
+                },
+                "player_count": {
+                    "type": "integer"
+                },
+                "top": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.RankingEntryResponse"
+                    }
+                }
+            }
+        },
         "handler.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -346,43 +332,52 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.SubmitScoreRequest": {
+        "handler.GetUserResponse": {
             "type": "object",
             "properties": {
-                "beatmap_id": {
+                "id": {
                     "type": "string"
                 },
-                "good_fast": {
-                    "type": "integer"
-                },
-                "good_late": {
-                    "type": "integer"
-                },
-                "input": {
-                    "type": "integer"
-                },
-                "max_combo": {
-                    "type": "integer"
-                },
-                "miss": {
-                    "type": "integer"
-                },
-                "perfect_critical_fast": {
-                    "type": "integer"
-                },
-                "perfect_critical_late": {
-                    "type": "integer"
-                },
-                "perfect_fast": {
-                    "type": "integer"
-                },
-                "perfect_late": {
-                    "type": "integer"
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.RankingEntryResponse": {
+            "type": "object",
+            "properties": {
+                "player_name": {
+                    "type": "string"
                 },
                 "score": {
                     "type": "integer"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.RegisterUserResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.SubmitScoreResponse": {
+            "description": "プレイ結果を登録します",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.UpdateUserNameResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }
@@ -404,6 +399,31 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.UpsertChartResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UserStatsResponse": {
+            "type": "object",
+            "properties": {
+                "average_score": {
+                    "type": "number"
+                },
+                "best_score": {
+                    "type": "integer"
+                },
+                "distinct_charts": {
+                    "type": "integer"
+                },
+                "total_plays": {
+                    "type": "integer"
+                }
+            }
+        },
         "handler.updateUserNameRequest": {
             "type": "object",
             "properties": {
@@ -421,9 +441,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "senirenol.trap.games",
 	BasePath:         "/api/v1",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"https"},
 	Title:            "Go Backend Template API",
 	Description:      "バックエンドテンプレートのAPI仕様書です。",
 	InfoInstanceName: "swagger",

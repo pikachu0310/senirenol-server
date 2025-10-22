@@ -1,6 +1,7 @@
 package integrationtests
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -26,4 +27,10 @@ func TestScores(t *testing.T) {
 	// ranking by chart
 	rec = doRequest(t, "GET", "/api/v1/charts/ranking?beatmap_id=songY_future&limit=3", "")
 	assert.Equal(t, rec.Result().Status, `200 OK`)
+	// 単体でも配列で返る
+	var arr []map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &arr)
+	assert.Assert(t, len(arr) == 1)
+	top := arr[0]["top"].([]any)
+	assert.Assert(t, len(top) >= 1)
 }

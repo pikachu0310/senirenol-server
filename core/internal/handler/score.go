@@ -30,7 +30,11 @@ type SubmitScoreRequest struct {
 // @Accept json
 // @Produce json
 // @Param body body SubmitScoreRequest true "プレイ結果"
-// @Success 200 {object} map[string]any
+type SubmitScoreResponse struct {
+	ID int64 `json:"id"`
+}
+
+// @Success 200 {object} SubmitScoreResponse "登録されたスコアのID"
 // @Failure 400 {object} ErrorResponse
 // @Router /scores [post]
 func (h *Handler) SubmitScore(c echo.Context) error {
@@ -63,5 +67,5 @@ func (h *Handler) SubmitScore(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
 
-	return c.JSON(http.StatusOK, map[string]any{"id": id})
+	return c.JSON(http.StatusOK, SubmitScoreResponse{ID: id})
 }

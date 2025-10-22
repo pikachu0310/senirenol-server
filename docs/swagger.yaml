@@ -1,35 +1,53 @@
 basePath: /api/v1
 definitions:
+  handler.ChartRankingResponse:
+    properties:
+      beatmap_id:
+        type: string
+      play_count:
+        type: integer
+      player_count:
+        type: integer
+      top:
+        items:
+          $ref: '#/definitions/handler.RankingEntryResponse'
+        type: array
+    type: object
   handler.ErrorResponse:
     properties:
       message:
         type: string
     type: object
-  handler.SubmitScoreRequest:
+  handler.GetUserResponse:
     properties:
-      beatmap_id:
+      id:
         type: string
-      good_fast:
-        type: integer
-      good_late:
-        type: integer
-      input:
-        type: integer
-      max_combo:
-        type: integer
-      miss:
-        type: integer
-      perfect_critical_fast:
-        type: integer
-      perfect_critical_late:
-        type: integer
-      perfect_fast:
-        type: integer
-      perfect_late:
-        type: integer
+      name:
+        type: string
+    type: object
+  handler.RankingEntryResponse:
+    properties:
+      player_name:
+        type: string
       score:
         type: integer
       user_id:
+        type: string
+    type: object
+  handler.RegisterUserResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  handler.SubmitScoreResponse:
+    description: プレイ結果を登録します
+    properties:
+      id:
+        type: integer
+    type: object
+  handler.UpdateUserNameResponse:
+    properties:
+      status:
         type: string
     type: object
   handler.UpsertChartRequest:
@@ -42,6 +60,22 @@ definitions:
         type: string
       song_name:
         type: string
+    type: object
+  handler.UpsertChartResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  handler.UserStatsResponse:
+    properties:
+      average_score:
+        type: number
+      best_score:
+        type: integer
+      distinct_charts:
+        type: integer
+      total_plays:
+        type: integer
     type: object
   handler.updateUserNameRequest:
     properties:
@@ -79,11 +113,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 登録結果
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handler.UpsertChartResponse'
         "400":
           description: Bad Request
           schema:
@@ -107,10 +139,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: ランキング配列
           schema:
-            additionalProperties: true
-            type: object
+            items:
+              $ref: '#/definitions/handler.ChartRankingResponse'
+            type: array
       summary: 譜面ランキング
       tags:
       - charts
@@ -131,31 +164,15 @@ paths:
       - ping
   /scores:
     post:
-      consumes:
-      - application/json
-      description: プレイ結果を登録します
-      parameters:
-      - description: プレイ結果
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.SubmitScoreRequest'
-      produces:
-      - application/json
       responses:
         "200":
-          description: OK
+          description: 登録されたスコアのID
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handler.SubmitScoreResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
-      summary: スコア登録
-      tags:
-      - scores
   /songs/playcount:
     get:
       produces:
@@ -180,11 +197,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{\"id\":\"UUID\"}'
+          description: 登録されたユーザーのID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handler.RegisterUserResponse'
       summary: ユーザー登録
       tags:
       - users
@@ -204,11 +219,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{id,name}'
+          description: ユーザー情報
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handler.GetUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -230,10 +243,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 統計情報
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handler.UserStatsResponse'
         "400":
           description: Bad Request
           schema:
@@ -257,11 +269,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{\"status\":\"ok\"}'
+          description: 更新結果
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handler.UpdateUserNameResponse'
         "400":
           description: Bad Request
           schema:

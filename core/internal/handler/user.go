@@ -14,14 +14,14 @@ import (
 // @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]string "{\"id\":\"UUID\"}"
+// @Success 200 {object} RegisterUserResponse "登録されたユーザーのID"
 // @Router /users [post]
 func (h *Handler) RegisterUser(c echo.Context) error {
 	id, err := h.repo.CreateUser(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, map[string]string{"id": id.String()})
+	return c.JSON(http.StatusOK, RegisterUserResponse{ID: id.String()})
 }
 
 type updateUserNameRequest struct {
@@ -36,7 +36,7 @@ type updateUserNameRequest struct {
 // @Accept json
 // @Produce json
 // @Param body body updateUserNameRequest true "更新内容"
-// @Success 200 {object} map[string]string "{\"status\":\"ok\"}"
+// @Success 200 {object} UpdateUserNameResponse "更新結果"
 // @Failure 400 {object} ErrorResponse
 // @Router /users/update [post]
 func (h *Handler) UpdateUserName(c echo.Context) error {
@@ -56,7 +56,7 @@ func (h *Handler) UpdateUserName(c echo.Context) error {
 	if err := h.repo.UpdateUserName(c.Request().Context(), req.UserID, req.UserName); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
+	return c.JSON(http.StatusOK, UpdateUserNameResponse{Status: "ok"})
 }
 
 // GetUser godoc
@@ -66,7 +66,7 @@ func (h *Handler) UpdateUserName(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param userID path string true "User ID" format(uuid)
-// @Success 200 {object} map[string]string "{id,name}"
+// @Success 200 {object} GetUserResponse "ユーザー情報"
 // @Failure 400 {object} ErrorResponse
 // @Router /users/{userID} [get]
 func (h *Handler) GetUser(c echo.Context) error {
@@ -78,7 +78,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, map[string]any{"id": u.ID, "name": u.Name})
+	return c.JSON(http.StatusOK, GetUserResponse{ID: u.ID, Name: u.Name})
 }
 
 // GetUserStats godoc
@@ -87,7 +87,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 // @Tags users
 // @Produce json
 // @Param userID path string true "User ID" format(uuid)
-// @Success 200 {object} map[string]any
+// @Success 200 {object} UserStatsResponse "統計情報"
 // @Failure 400 {object} ErrorResponse
 // @Router /users/{userID}/stats [get]
 func (h *Handler) GetUserStats(c echo.Context) error {

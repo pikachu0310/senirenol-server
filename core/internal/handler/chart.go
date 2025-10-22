@@ -22,7 +22,7 @@ type UpsertChartRequest struct {
 // @Accept json
 // @Produce json
 // @Param chart body UpsertChartRequest true "譜面情報"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} UpsertChartResponse "登録結果"
 // @Failure 400 {object} ErrorResponse
 // @Router /charts [post]
 func (h *Handler) UpsertChart(c echo.Context) error {
@@ -46,7 +46,7 @@ func (h *Handler) UpsertChart(c echo.Context) error {
 	}); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
+	return c.JSON(http.StatusOK, UpsertChartResponse{Status: "ok"})
 }
 
 // GetChartRanking godoc
@@ -56,7 +56,7 @@ func (h *Handler) UpsertChart(c echo.Context) error {
 // @Produce json
 // @Param beatmap_id query string false "譜面ID"
 // @Param limit query int false "ランキング上限"
-// @Success 200 {object} map[string]any
+// @Success 200 {array} ChartRankingResponse "ランキング配列"
 // @Router /charts/ranking [get]
 func (h *Handler) GetChartRanking(c echo.Context) error {
 	beatmapID := c.QueryParam("beatmap_id")
@@ -72,13 +72,28 @@ func (h *Handler) GetChartRanking(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 		}
-		return c.JSON(http.StatusOK, r)
+		// 単体でも配列で返す
+		return c.JSON(http.StatusOK, []ChartRankingResponse{{
+			BeatmapID:   r.BeatmapID,
+			PlayerCount: r.PlayerCount,
+			PlayCount:   r.PlayCount,
+			Top:         toRankingEntryResponse(r.Top),
+		}})
 	}
 	rs, err := h.repo.GetAllChartsRankings(c.Request().Context(), limit)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-	return c.JSON(http.StatusOK, rs)
+	out := make([]ChartRankingResponse, 0, len(rs))
+	for _, r := range rs {
+		out = append(out, ChartRankingResponse{
+			BeatmapID:   r.BeatmapID,
+			PlayerCount: r.PlayerCount,
+			PlayCount:   r.PlayCount,
+			Top:         toRankingEntryResponse(r.Top),
+		})
+	}
+	return c.JSON(http.StatusOK, out)
 }
 
 // GetSongPlaycountRanking godoc
@@ -93,4 +108,19 @@ func (h *Handler) GetSongPlaycountRanking(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
 	return c.JSON(http.StatusOK, rs)
+}
+
+func toRankingEntryResponse(in []repository.RankingEntry) []RankingEntryResponse {
+	if in == nil {
+		return nil
+	}
+	out := make([]RankingEntryResponse, len(in))
+	for i, e := range in {
+		out[i] = RankingEntryResponse{
+			UserID:     e.UserID,
+			PlayerName: e.Name,
+			Score:      e.Score,
+		}
+	}
+	return out
 }
