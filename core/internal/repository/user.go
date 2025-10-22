@@ -2,7 +2,10 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -10,33 +13,42 @@ import (
 type (
 	// users table
 	User struct {
-		ID    uuid.UUID `db:"id"`
-		Name  string    `db:"name"`
-		Email string    `db:"email"`
-	}
-
-	CreateUserParams struct {
-		Name  string
-		Email string
+		ID        uuid.UUID `db:"id"`
+		Name      string    `db:"name"`
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 	}
 )
 
-func (r *Repository) GetUsers(ctx context.Context) ([]*User, error) {
-	users := []*User{}
-	if err := r.db.SelectContext(ctx, &users, "SELECT * FROM users"); err != nil {
-		return nil, fmt.Errorf("select users: %w", err)
+func randomDefaultName() string {
+	const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+	b := make([]byte, 6)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
 	}
-
-	return users, nil
+	return "Player-" + string(b)
 }
 
-func (r *Repository) CreateUser(ctx context.Context, params CreateUserParams) (uuid.UUID, error) {
+func (r *Repository) CreateUser(ctx context.Context) (uuid.UUID, error) {
 	userID := uuid.New()
-	if _, err := r.db.ExecContext(ctx, "INSERT INTO users (id, name, email) VALUES (?, ?, ?)", userID, params.Name, params.Email); err != nil {
+	name := randomDefaultName()
+	if _, err := r.db.ExecContext(ctx, "INSERT INTO users (id, name) VALUES (?, ?)", userID, name); err != nil {
 		return uuid.Nil, fmt.Errorf("insert user: %w", err)
 	}
 
 	return userID, nil
+}
+
+func (r *Repository) UpdateUserName(ctx context.Context, userID uuid.UUID, name string) error {
+	res, err := r.db.ExecContext(ctx, "UPDATE users SET name = ? WHERE id = ?", name, userID)
+	if err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 func (r *Repository) GetUser(ctx context.Context, userID uuid.UUID) (*User, error) {
@@ -44,6 +56,5 @@ func (r *Repository) GetUser(ctx context.Context, userID uuid.UUID) (*User, erro
 	if err := r.db.GetContext(ctx, user, "SELECT * FROM users WHERE id = ?", userID); err != nil {
 		return nil, fmt.Errorf("select user: %w", err)
 	}
-
 	return user, nil
 }

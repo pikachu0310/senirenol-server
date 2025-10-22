@@ -1,31 +1,53 @@
 basePath: /api/v1
 definitions:
-  handler.CreateUserRequest:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-    type: object
-  handler.CreateUserResponse:
-    properties:
-      id:
-        type: string
-    type: object
   handler.ErrorResponse:
     properties:
       message:
         type: string
     type: object
-  handler.GetUserResponse:
+  handler.SubmitScoreRequest:
     properties:
-      email:
+      beatmap_id:
         type: string
-      iconUrl:
+      good_fast:
+        type: integer
+      good_late:
+        type: integer
+      input:
+        type: integer
+      max_combo:
+        type: integer
+      miss:
+        type: integer
+      perfect_critical_fast:
+        type: integer
+      perfect_critical_late:
+        type: integer
+      perfect_fast:
+        type: integer
+      perfect_late:
+        type: integer
+      score:
+        type: integer
+      user_id:
         type: string
-      id:
+    type: object
+  handler.UpsertChartRequest:
+    properties:
+      beatmap_id:
         type: string
-      name:
+      difficulty:
+        type: integer
+      parallel_string:
+        type: string
+      song_name:
+        type: string
+    type: object
+  handler.updateUserNameRequest:
+    properties:
+      user_id:
+        type: string
+      user_name:
         type: string
     type: object
 host: localhost:8080
@@ -42,6 +64,56 @@ info:
   title: Go Backend Template API
   version: "1.0"
 paths:
+  /charts:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 譜面情報
+        in: body
+        name: chart
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpsertChartRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: 譜面登録/更新
+      tags:
+      - charts
+  /charts/ranking:
+    get:
+      description: beatmap_idを指定したランキング、未指定時は全譜面のランキング
+      parameters:
+      - description: 譜面ID
+        in: query
+        name: beatmap_id
+        type: string
+      - description: ランキング上限
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 譜面ランキング
+      tags:
+      - charts
   /ping:
     get:
       consumes:
@@ -57,61 +129,70 @@ paths:
       summary: Ping API
       tags:
       - ping
-  /users:
-    get:
-      consumes:
-      - application/json
-      description: 全ユーザーの情報を取得します
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ユーザー一覧
-          schema:
-            items:
-              $ref: '#/definitions/handler.GetUserResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.ErrorResponse'
-      summary: ユーザー一覧取得
-      tags:
-      - users
+  /scores:
     post:
       consumes:
       - application/json
-      description: 新しいユーザーを作成します
+      description: プレイ結果を登録します
       parameters:
-      - description: ユーザー情報
+      - description: プレイ結果
         in: body
-        name: user
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/handler.CreateUserRequest'
+          $ref: '#/definitions/handler.SubmitScoreRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: 作成されたユーザーのID
+          description: OK
           schema:
-            $ref: '#/definitions/handler.CreateUserResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
-        "500":
-          description: Internal Server Error
+      summary: スコア登録
+      tags:
+      - scores
+  /songs/playcount:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/handler.ErrorResponse'
-      summary: ユーザー作成
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      summary: 楽曲プレイ回数ランキング
+      tags:
+      - charts
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: 初回起動時に匿名ユーザーを生成し、user_idを返します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{\"id\":\"UUID\"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: ユーザー登録
       tags:
       - users
   /users/{userID}:
     get:
       consumes:
       - application/json
-      description: 指定したIDのユーザー情報を取得します
+      description: 指定したIDのユーザー情報を取得します（名前のみ）
       parameters:
       - description: User ID
         format: uuid
@@ -123,18 +204,69 @@ paths:
       - application/json
       responses:
         "200":
-          description: ユーザー情報
+          description: '{id,name}'
           schema:
-            $ref: '#/definitions/handler.GetUserResponse'
+            additionalProperties:
+              type: string
+            type: object
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
-        "500":
-          description: Internal Server Error
+      summary: ユーザー情報取得
+      tags:
+      - users
+  /users/{userID}/stats:
+    get:
+      description: プレイ回数など統計情報を返します
+      parameters:
+      - description: User ID
+        format: uuid
+        in: path
+        name: userID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
-      summary: ユーザー情報取得
+      summary: ユーザー統計
+      tags:
+      - users
+  /users/update:
+    post:
+      consumes:
+      - application/json
+      description: user_idに対してuser_nameを更新します
+      parameters:
+      - description: 更新内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateUserNameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{\"status\":\"ok\"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: ユーザー名更新
       tags:
       - users
 schemes:

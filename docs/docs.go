@@ -24,6 +24,83 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/charts": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "charts"
+                ],
+                "summary": "譜面登録/更新",
+                "parameters": [
+                    {
+                        "description": "譜面情報",
+                        "name": "chart",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpsertChartRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/charts/ranking": {
+            "get": {
+                "description": "beatmap_idを指定したランキング、未指定時は全譜面のランキング",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "charts"
+                ],
+                "summary": "譜面ランキング",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "譜面ID",
+                        "name": "beatmap_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ランキング上限",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "サーバーの死活確認用エンドポイント",
@@ -47,39 +124,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users": {
-            "get": {
-                "description": "全ユーザーの情報を取得します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "ユーザー一覧取得",
-                "responses": {
-                    "200": {
-                        "description": "ユーザー一覧",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/handler.GetUserResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
-                        }
-                    }
-                }
-            },
+        "/scores": {
             "post": {
-                "description": "新しいユーザーを作成します",
+                "description": "プレイ結果を登録します",
                 "consumes": [
                     "application/json"
                 ],
@@ -87,25 +134,26 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "scores"
                 ],
-                "summary": "ユーザー作成",
+                "summary": "スコア登録",
                 "parameters": [
                     {
-                        "description": "ユーザー情報",
-                        "name": "user",
+                        "description": "プレイ結果",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateUserRequest"
+                            "$ref": "#/definitions/handler.SubmitScoreRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "作成されたユーザーのID",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.CreateUserResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -113,9 +161,95 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/songs/playcount": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "charts"
+                ],
+                "summary": "楽曲プレイ回数ランキング",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "post": {
+                "description": "初回起動時に匿名ユーザーを生成し、user_idを返します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "ユーザー登録",
+                "responses": {
+                    "200": {
+                        "description": "{\\\"id\\\":\\\"UUID\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/update": {
+            "post": {
+                "description": "user_idに対してuser_nameを更新します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "ユーザー名更新",
+                "parameters": [
+                    {
+                        "description": "更新内容",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateUserNameRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\\\"status\\\":\\\"ok\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
                         }
@@ -125,7 +259,7 @@ const docTemplate = `{
         },
         "/users/{userID}": {
             "get": {
-                "description": "指定したIDのユーザー情報を取得します",
+                "description": "指定したIDのユーザー情報を取得します（名前のみ）",
                 "consumes": [
                     "application/json"
                 ],
@@ -148,9 +282,12 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ユーザー情報",
+                        "description": "{id,name}",
                         "schema": {
-                            "$ref": "#/definitions/handler.GetUserResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
@@ -158,9 +295,40 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/users/{userID}/stats": {
+            "get": {
+                "description": "プレイ回数など統計情報を返します",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "ユーザー統計",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User ID",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
                         }
@@ -170,25 +338,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handler.CreateUserRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.CreateUserResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                }
-            }
-        },
         "handler.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -197,19 +346,71 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.GetUserResponse": {
+        "handler.SubmitScoreRequest": {
             "type": "object",
             "properties": {
-                "email": {
+                "beatmap_id": {
                     "type": "string"
                 },
-                "iconUrl": {
+                "good_fast": {
+                    "type": "integer"
+                },
+                "good_late": {
+                    "type": "integer"
+                },
+                "input": {
+                    "type": "integer"
+                },
+                "max_combo": {
+                    "type": "integer"
+                },
+                "miss": {
+                    "type": "integer"
+                },
+                "perfect_critical_fast": {
+                    "type": "integer"
+                },
+                "perfect_critical_late": {
+                    "type": "integer"
+                },
+                "perfect_fast": {
+                    "type": "integer"
+                },
+                "perfect_late": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UpsertChartRequest": {
+            "type": "object",
+            "properties": {
+                "beatmap_id": {
                     "type": "string"
                 },
-                "id": {
+                "difficulty": {
+                    "type": "integer"
+                },
+                "parallel_string": {
                     "type": "string"
                 },
-                "name": {
+                "song_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.updateUserNameRequest": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }

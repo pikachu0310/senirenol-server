@@ -27,8 +27,22 @@ func SetupRoutes(h *handler.Handler, e *echo.Echo) {
 	// user API
 	userAPI := v1API.Group("/users")
 	{
-		userAPI.GET("", h.GetUsers)
-		userAPI.POST("", h.CreateUser)
+		userAPI.POST("", h.RegisterUser)
+		userAPI.POST("/update", h.UpdateUserName)
 		userAPI.GET("/:userID", h.GetUser)
+		userAPI.GET("/:userID/stats", h.GetUserStats)
 	}
+
+	// chart API
+	chartAPI := v1API.Group("/charts")
+	{
+		chartAPI.POST("", h.UpsertChart)
+		chartAPI.GET("/ranking", h.GetChartRanking)
+	}
+
+	// song API
+	v1API.GET("/songs/playcount", h.GetSongPlaycountRanking)
+
+	// score API
+	v1API.POST("/scores", h.SubmitScore)
 }

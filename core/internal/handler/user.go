@@ -1,150 +1,104 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/pikachu0310/senirenol-server/core/internal/repository"
-	"github.com/pikachu0310/senirenol-server/core/internal/services/photoapi"
-
 	vd "github.com/go-ozzo/ozzo-validation"
-	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
-// スキーマ定義
-type (
-	GetUsersResponse []GetUserResponse
-
-	GetUserResponse struct {
-		ID      uuid.UUID `json:"id"`
-		Name    string    `json:"name"`
-		Email   string    `json:"email"`
-		IconURL string    `json:"iconUrl"`
-	}
-
-	CreateUserRequest struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-
-	CreateUserResponse struct {
-		ID uuid.UUID `json:"id"`
-	}
-
-	ErrorResponse struct {
-		Message string `json:"message"`
-	}
-)
-
-// GetUsers godoc
-// @Summary ユーザー一覧取得
-// @Description 全ユーザーの情報を取得します
+// RegisterUser godoc
+// @Summary ユーザー登録
+// @Description 初回起動時に匿名ユーザーを生成し、user_idを返します
 // @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {array} GetUserResponse "ユーザー一覧"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
-// @Router /users [get]
-func (h *Handler) GetUsers(c echo.Context) error {
-	users, err := h.repo.GetUsers(c.Request().Context())
+// @Success 200 {object} map[string]string "{\"id\":\"UUID\"}"
+// @Router /users [post]
+func (h *Handler) RegisterUser(c echo.Context) error {
+	id, err := h.repo.CreateUser(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-
-	photo, err := photoapi.GetPhoto()
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
-	}
-
-	res := make(GetUsersResponse, len(users))
-	for i, user := range users {
-		res[i] = GetUserResponse{
-			ID:      user.ID,
-			Name:    user.Name,
-			Email:   user.Email,
-			IconURL: photo.ThumbnailURL,
-		}
-	}
-
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, map[string]string{"id": id.String()})
 }
 
-// CreateUser godoc
-// @Summary ユーザー作成
-// @Description 新しいユーザーを作成します
+type updateUserNameRequest struct {
+	UserID   string `json:"user_id"`
+	UserName string `json:"user_name"`
+}
+
+// UpdateUserName godoc
+// @Summary ユーザー名更新
+// @Description user_idに対してuser_nameを更新します
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body CreateUserRequest true "ユーザー情報"
-// @Success 200 {object} CreateUserResponse "作成されたユーザーのID"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
-// @Router /users [post]
-func (h *Handler) CreateUser(c echo.Context) error {
-	req := new(CreateUserRequest)
-	if err := c.Bind(req); err != nil {
+// @Param body body updateUserNameRequest true "更新内容"
+// @Success 200 {object} map[string]string "{\"status\":\"ok\"}"
+// @Failure 400 {object} ErrorResponse
+// @Router /users/update [post]
+func (h *Handler) UpdateUserName(c echo.Context) error {
+	var req updateUserNameRequest
+	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body").SetInternal(err)
 	}
-
-	err := vd.ValidateStruct(
-		req,
-		vd.Field(&req.Name, vd.Required),
-		vd.Field(&req.Email, vd.Required, is.Email),
-	)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err)).SetInternal(err)
+	if err := vd.ValidateStruct(&req,
+		vd.Field(&req.UserID, vd.Required),
+		vd.Field(&req.UserName, vd.Required, vd.RuneLength(1, 255)),
+	); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-
-	userID, err := h.repo.CreateUser(c.Request().Context(), repository.CreateUserParams{
-		Name:  req.Name,
-		Email: req.Email,
-	})
+	uid, err := uuid.Parse(req.UserID)
 	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid user_id").SetInternal(err)
+	}
+	if err := h.repo.UpdateUserName(c.Request().Context(), uid, req.UserName); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-
-	res := CreateUserResponse{
-		ID: userID,
-	}
-
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }
 
 // GetUser godoc
 // @Summary ユーザー情報取得
-// @Description 指定したIDのユーザー情報を取得します
+// @Description 指定したIDのユーザー情報を取得します（名前のみ）
 // @Tags users
 // @Accept json
 // @Produce json
 // @Param userID path string true "User ID" format(uuid)
-// @Success 200 {object} GetUserResponse "ユーザー情報"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Success 200 {object} map[string]string "{id,name}"
+// @Failure 400 {object} ErrorResponse
 // @Router /users/{userID} [get]
 func (h *Handler) GetUser(c echo.Context) error {
 	userID, err := uuid.Parse(c.Param("userID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid userID").SetInternal(err)
 	}
-
-	user, err := h.repo.GetUser(c.Request().Context(), userID)
+	u, err := h.repo.GetUser(c.Request().Context(), userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
+	return c.JSON(http.StatusOK, map[string]any{"id": u.ID, "name": u.Name})
+}
 
-	photo, err := photoapi.GetPhoto()
+// GetUserStats godoc
+// @Summary ユーザー統計
+// @Description プレイ回数など統計情報を返します
+// @Tags users
+// @Produce json
+// @Param userID path string true "User ID" format(uuid)
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} ErrorResponse
+// @Router /users/{userID}/stats [get]
+func (h *Handler) GetUserStats(c echo.Context) error {
+	uid := c.Param("userID")
+	if _, err := uuid.Parse(uid); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid userID").SetInternal(err)
+	}
+	s, err := h.repo.GetUserStats(c.Request().Context(), uid)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 	}
-
-	res := GetUserResponse{
-		ID:      user.ID,
-		Name:    user.Name,
-		Email:   user.Email,
-		IconURL: photo.ThumbnailURL,
-	}
-
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, s)
 }
