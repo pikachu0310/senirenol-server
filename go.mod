@@ -11,11 +11,12 @@ require (
 	github.com/pressly/goose/v3 v3.25.0
 	github.com/ras0q/goalie v0.5.0
 	github.com/swaggo/echo-swagger v1.4.1
-	github.com/swaggo/swag v1.16.4
+	github.com/swaggo/swag v1.16.6
 )
 
 require (
 	github.com/ghodss/yaml v1.0.0 // indirect
+	golang.org/x/mod v0.25.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
